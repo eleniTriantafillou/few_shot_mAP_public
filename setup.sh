@@ -1,5 +1,5 @@
 OMNIGLOT_PATH="/ais/gobi4/eleni/omniglot"
-MINI_IMAGENET_PATH="/ais/gobi4/jsnell/data/twitterminiImagenet/images"
+MINI_IMAGENET_PATH="/ais/gobi4/eleni/miniImagenet/images"
 OMNIGLOT_SPLITS_PATH="/ais/gobi4/eleni/few_shot_mAP/data/dataset_splits/omniglot"
 MINI_IMAGENET_SPLITS_PATH="/ais/gobi4/eleni/few_shot_mAP/data/dataset_splits/mini_imagenet"
 
