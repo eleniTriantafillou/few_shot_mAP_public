@@ -3,7 +3,7 @@ This repository contains the code for the paper "Few-Shot Learning Through an In
 
 ### Prerequisites
 - Python 2
-- tensorflow version 0.12
+- tensorflow version 1.3
 - NumPy
 - tqdm
 - cuda (if you want to run on GPU)
