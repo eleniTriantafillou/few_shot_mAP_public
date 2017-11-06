@@ -45,8 +45,8 @@ class SiameseModel(Model):
     self._siamese_prediction = self.get_siamese_prediction()
     if self.config.loss_function == "cross_entropy":
       loss = tf.reduce_mean(
-          tf.nn.softmax_cross_entropy_with_logits(self.siamese_prediction,
-                                                  self.y))
+          tf.nn.softmax_cross_entropy_with_logits(logits=self.siamese_prediction,
+                                                  labels=self.y))
     return loss
 
   def compute_siamese_accuracy(self):

@@ -128,6 +128,9 @@ class Model(object):
     elif self.config.optimizer == 'SGD_momentum':
       optimizer = tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9)
     train_step = optimizer.minimize(self.loss)
+    self._lr = lr
+    self._new_lr = tf.placeholder(tf.float32, [], name="new_lr")
+    self._assign_lr = tf.assign(self._lr, self._new_lr)
     return train_step
 
   def compute_siamese_accuracy(self):
@@ -224,21 +227,19 @@ class Model(object):
     temp1_Y = tf.greater(phi_pos_expanded,
                          phi_neg_expanded)  # (num_pos, num_neg) of True/False's
     temp2_Y = 2. * tf.to_float(temp1_Y)  # (num_pos, num_neg) of 2/0's
-    Y_std = tf.sub(temp2_Y,
-                   tf.ones_like(temp2_Y))  # (num_pos, num_neg) of 1/-1's
-    F_std = tf.mul(Y_std,
-                   phi_pos_expanded - phi_neg_expanded)  # (num_pos, num_neg)
+    Y_std = temp2_Y - tf.ones_like(temp2_Y)  # (num_pos, num_neg) of 1/-1's
+    F_std = Y_std * (phi_pos_expanded - phi_neg_expanded)  # (num_pos, num_neg)
     AP_score_std = tf.truediv(
         tf.reduce_sum(F_std), tf.to_float(q_num_pos * q_num_neg))
 
     # Score of loss-augmented inferred ranking
-    F_aug = tf.mul(q_Y_aug, tf.sub(phi_pos_expanded, phi_neg_expanded))
+    F_aug = q_Y_aug * (phi_pos_expanded - phi_neg_expanded)
     AP_score_aug = tf.truediv(
         tf.reduce_sum(F_aug), tf.to_float(q_num_pos * q_num_neg))
 
     # Score of the groundtruth
     q_Y_GT = tf.ones_like(Y_std)
-    F_GT = tf.mul(q_Y_GT, tf.sub(phi_pos_expanded, phi_neg_expanded))
+    F_GT = q_Y_GT * (phi_pos_expanded - phi_neg_expanded)
     AP_score_GT = tf.truediv(
         tf.reduce_sum(F_GT), tf.to_float(q_num_pos * q_num_neg))
 
@@ -296,26 +297,26 @@ class Model(object):
         # the same shape in each iteration, we zero-pad them to be batch_size-long.
         def _first_score():
           this_score_std_padded = tf.concat(
-              0, [q_score_std, tf.zeros([self.batch_size - i - 1, 1])])
+              [q_score_std, tf.zeros([self.batch_size - i - 1, 1])], 0)
           this_score_aug_padded = tf.concat(
-              0, [q_score_aug, tf.zeros([self.batch_size - i - 1, 1])])
+              [q_score_aug, tf.zeros([self.batch_size - i - 1, 1])], 0)
           this_score_GT_padded = tf.concat(
-              0, [q_score_GT, tf.zeros([self.batch_size - i - 1, 1])])
+              [q_score_GT, tf.zeros([self.batch_size - i - 1, 1])], 0)
           score_std_next = tf.add(score_std_prev, this_score_std_padded)
           score_aug_next = tf.add(score_aug_prev, this_score_aug_padded)
           score_GT_next = tf.add(score_GT_prev, this_score_GT_padded)
           return score_std_next, score_aug_next, score_GT_next
 
         def _else_score():
-          temp = tf.concat(0, [tf.zeros([i, 1]), q_score_std])
+          temp = tf.concat([tf.zeros([i, 1]), q_score_std], 0)
           this_score_std_padded = tf.concat(
-              0, [temp, tf.zeros([self.batch_size - i - 1, 1])])
-          temp = tf.concat(0, [tf.zeros([i, 1]), q_score_aug])
+              [temp, tf.zeros([self.batch_size - i - 1, 1])], 0)
+          temp = tf.concat([tf.zeros([i, 1]), q_score_aug], 0)
           this_score_aug_padded = tf.concat(
-              0, [temp, tf.zeros([self.batch_size - i - 1, 1])])
-          temp = tf.concat(0, [tf.zeros([i, 1]), q_score_GT])
+              [temp, tf.zeros([self.batch_size - i - 1, 1])], 0)
+          temp = tf.concat([tf.zeros([i, 1]), q_score_GT], 0)
           this_score_GT_padded = tf.concat(
-              0, [temp, tf.zeros([self.batch_size - i - 1, 1])])
+              [temp, tf.zeros([self.batch_size - i - 1, 1])], 0)
           score_std_next = tf.add(score_std_prev, this_score_std_padded)
           score_aug_next = tf.add(score_aug_prev, this_score_aug_padded)
           score_GT_next = tf.add(score_GT_prev, this_score_GT_padded)
@@ -334,26 +335,26 @@ class Model(object):
         # (since not all queries will have the same number of positive points)
         padding_phi_pos = tf.zeros([1, max_pos - q_num_pos])
         padding_phi_neg = tf.zeros([1, max_neg - q_num_neg])
-        this_phi_pos = tf.concat(1, [q_phi_pos, padding_phi_pos])
-        this_phi_neg = tf.concat(1, [q_phi_neg, padding_phi_neg])
+        this_phi_pos = tf.concat([q_phi_pos, padding_phi_pos], 1)
+        this_phi_neg = tf.concat([q_phi_neg, padding_phi_neg], 1)
 
         # Update phi_pos_next, phi_neg_next
         def _first_phi():
           this_phi_pos_padded = tf.concat(
-              0, [this_phi_pos, tf.zeros([self.batch_size - i - 1, max_pos])])
+              [this_phi_pos, tf.zeros([self.batch_size - i - 1, max_pos])], 0)
           this_phi_neg_padded = tf.concat(
-              0, [this_phi_neg, tf.zeros([self.batch_size - i - 1, max_neg])])
+              [this_phi_neg, tf.zeros([self.batch_size - i - 1, max_neg])], 0)
           phi_pos_next = tf.add(phi_pos_prev, this_phi_pos_padded)
           phi_neg_next = tf.add(phi_neg_prev, this_phi_neg_padded)
           return phi_pos_next, phi_neg_next
 
         def _else_phi():
-          temp = tf.concat(0, [tf.zeros([i, max_pos]), this_phi_pos])
+          temp = tf.concat([tf.zeros([i, max_pos]), this_phi_pos], 0)
           this_phi_pos_padded = tf.concat(
-              0, [temp, tf.zeros([self.batch_size - i - 1, max_pos])])
-          temp = tf.concat(0, [tf.zeros([i, max_neg]), this_phi_neg])
+              [temp, tf.zeros([self.batch_size - i - 1, max_pos])], 0)
+          temp = tf.concat([tf.zeros([i, max_neg]), this_phi_neg], 0)
           this_phi_neg_padded = tf.concat(
-              0, [temp, tf.zeros([self.batch_size - i - 1, max_neg])])
+              [temp, tf.zeros([self.batch_size - i - 1, max_neg])], 0)
           phi_pos_next = tf.add(phi_pos_prev, this_phi_pos_padded)
           phi_neg_next = tf.add(phi_neg_prev, this_phi_neg_padded)
           return phi_pos_next, phi_neg_next
@@ -374,26 +375,26 @@ class Model(object):
         # Update score_std_next, score_aug_next
         def _first_score():
           this_score_std_padded = tf.concat(
-              0, [q_score_std, tf.zeros([self.batch_size - i - 1, 1])])
+              [q_score_std, tf.zeros([self.batch_size - i - 1, 1])], 0)
           this_score_aug_padded = tf.concat(
-              0, [q_score_aug, tf.zeros([self.batch_size - i - 1, 1])])
+              [q_score_aug, tf.zeros([self.batch_size - i - 1, 1])], 0)
           this_score_GT_padded = tf.concat(
-              0, [q_score_GT, tf.zeros([self.batch_size - i - 1, 1])])
+              [q_score_GT, tf.zeros([self.batch_size - i - 1, 1])], 0)
           score_std_next = tf.add(score_std_prev, this_score_std_padded)
           score_aug_next = tf.add(score_aug_prev, this_score_aug_padded)
           score_GT_next = tf.add(score_GT_prev, this_score_GT_padded)
           return score_std_next, score_aug_next, score_GT_next
 
         def _else_score():
-          temp = tf.concat(0, [tf.zeros([i, 1]), q_score_std])
+          temp = tf.concat([tf.zeros([i, 1]), q_score_std], 0)
           this_score_std_padded = tf.concat(
-              0, [temp, tf.zeros([self.batch_size - i - 1, 1])])
-          temp = tf.concat(0, [tf.zeros([i, 1]), q_score_aug])
+              [temp, tf.zeros([self.batch_size - i - 1, 1])], 0)
+          temp = tf.concat([tf.zeros([i, 1]), q_score_aug], 0)
           this_score_aug_padded = tf.concat(
-              0, [temp, tf.zeros([self.batch_size - i - 1, 1])])
-          temp = tf.concat(0, [tf.zeros([i, 1]), q_score_GT])
+              [temp, tf.zeros([self.batch_size - i - 1, 1])], 0)
+          temp = tf.concat([tf.zeros([i, 1]), q_score_GT], 0)
           this_score_GT_padded = tf.concat(
-              0, [temp, tf.zeros([self.batch_size - i - 1, 1])])
+              [temp, tf.zeros([self.batch_size - i - 1, 1])], 0)
           score_std_next = tf.add(score_std_prev, this_score_std_padded)
           score_aug_next = tf.add(score_aug_prev, this_score_aug_padded)
           score_GT_next = tf.add(score_GT_prev, this_score_GT_padded)
@@ -408,20 +409,20 @@ class Model(object):
         # Update phi_pos_next, phi_neg_next
         def _first_phi():
           this_phi_pos_padded = tf.concat(
-              0, [q_phi_pos, tf.zeros([self.batch_size - i - 1, max_pos])])
+              [q_phi_pos, tf.zeros([self.batch_size - i - 1, max_pos])], 0)
           this_phi_neg_padded = tf.concat(
-              0, [q_phi_neg, tf.zeros([self.batch_size - i - 1, max_neg])])
+              [q_phi_neg, tf.zeros([self.batch_size - i - 1, max_neg])], 0)
           phi_pos_next = tf.add(phi_pos_prev, this_phi_pos_padded)
           phi_neg_next = tf.add(phi_neg_prev, this_phi_neg_padded)
           return phi_pos_next, phi_neg_next
 
         def _else_phi():
-          temp = tf.concat(0, [tf.zeros([i, max_pos]), q_phi_pos])
+          temp = tf.concat([tf.zeros([i, max_pos]), q_phi_pos], 0)
           this_phi_pos_padded = tf.concat(
-              0, [temp, tf.zeros([self.batch_size - i - 1, max_pos])])
-          temp = tf.concat(0, [tf.zeros([i, max_neg]), q_phi_neg])
+              [temp, tf.zeros([self.batch_size - i - 1, max_pos])], 0)
+          temp = tf.concat([tf.zeros([i, max_neg]), q_phi_neg], 0)
           this_phi_neg_padded = tf.concat(
-              0, [temp, tf.zeros([self.batch_size - i - 1, max_neg])])
+              [temp, tf.zeros([self.batch_size - i - 1, max_neg])], 0)
           phi_pos_next = tf.add(phi_pos_prev, this_phi_pos_padded)
           phi_neg_next = tf.add(phi_neg_prev, this_phi_neg_padded)
           return phi_pos_next, phi_neg_next
@@ -433,14 +434,13 @@ class Model(object):
         # make ith position a 1 in the one-hot-encoded vector
         def _first_skip():
           skipped_this = tf.concat(
-              0, [tf.ones([1]), tf.zeros([self.batch_size - i - 1])])
+              [tf.ones([1]), tf.zeros([self.batch_size - i - 1])], 0)
           skipped_q_next = tf.add(skipped_q_prev, skipped_this)
           return skipped_q_next
 
         def _else_skip():
-          temp = tf.concat(0, [tf.zeros([i]), tf.ones([1])])
-          skipped_this = tf.concat(0,
-                                   [temp, tf.zeros([self.batch_size - i - 1])])
+          temp = tf.concat([tf.zeros([i]), tf.ones([1])], 0)
+          skipped_this = tf.concat([temp, tf.zeros([self.batch_size - i - 1])], 0)
           skipped_q_next = tf.add(skipped_q_prev, skipped_this)
           return skipped_q_next
 

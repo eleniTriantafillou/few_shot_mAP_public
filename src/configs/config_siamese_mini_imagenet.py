@@ -42,10 +42,6 @@ class SiameseConfigMiniImageNet(GenericConfigMiniImageNet):
         "N": 5,
         "type": "classif"
     }, {
-        "K": 5,
-        "N": 5,
-        "type": "classif"
-    }, {
         "K": 1,
         "N": 5,
         "type": "retrieval"
