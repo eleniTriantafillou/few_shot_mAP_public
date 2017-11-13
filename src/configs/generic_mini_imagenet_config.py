@@ -4,14 +4,12 @@ class GenericConfigMiniImageNet(object):
 
   def __init__(self):
     self.dataset = "mini_imagenet"
-    self.batch_size = 64
-    self.nway = 8
     self.height = 84
     self.width = 84
     self.channels = 3
     self.num_fewshot_samples = 100
     self.optimizer = "ADAM"
-    self.niters = 30000
+    self.niters = 25000
     self.compute_mAP = True
     self.compute_fewshot = True
     self.display_step = 20

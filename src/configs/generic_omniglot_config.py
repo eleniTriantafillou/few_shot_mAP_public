@@ -4,8 +4,6 @@ class GenericConfigOmniglot(object):
 
   def __init__(self):
     self.dataset = "omniglot"
-    self.batch_size = 64
-    self.nway = 8
     self.height = 28
     self.width = 28
     self.channels = 1

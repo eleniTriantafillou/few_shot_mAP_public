@@ -28,8 +28,6 @@ class SiameseConfigMiniImageNet(GenericConfigMiniImageNet):
     self.optimizer = "ADAM"
 
     # Batch formation
-    # self.batch_size = 64
-    # self.batch_size = 16
     self.batch_size = 128
     self.nway = 8  # number of classes allowed in each batch
 
@@ -37,18 +35,15 @@ class SiameseConfigMiniImageNet(GenericConfigMiniImageNet):
 
     self.name = "siamese_miniImageNet"
 
+    # Metrics to plot throughout training
     self.few_shot_metrics = [{
         "K": 1,
         "N": 5,
-        "type": "classif"
+        "type": "classif" 
     }, {
         "K": 1,
         "N": 5,
-        "type": "retrieval"
-    }, {
-        "K": 1,
-        "N": 20,
-        "type": "retrieval"
+         "type": "retrieval"
     }]
 
     # deep dashboard location

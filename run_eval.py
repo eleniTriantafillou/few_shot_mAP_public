@@ -37,7 +37,7 @@ if __name__ == "__main__":
       model_checkpoint_line = lines[0].strip()
       dash_ind = model_checkpoint_line.rfind('-')
       uidx = int(model_checkpoint_line[dash_ind + 1:-1])
-      print("Restored from updated {}".format(uidx))
+      print("Restored from update {}".format(uidx))
     else:
       raise ValueError(
           "No checkpoint to restore from in {}".format(config.saveloc))
@@ -47,22 +47,30 @@ if __name__ == "__main__":
 
     # Perform evaluation
     if config.dataset == "omniglot":
+      oneshot_5way_mAP, _ = test_evaluator.eval_oneshot_retrieval(
+        5, 10, num_samples=1000)
+      oneshot_20way_mAP, _ = test_evaluator.eval_oneshot_retrieval(
+        20, 10, num_samples=1000)
       oneshot_5way_acc, _ = test_evaluator.eval_fewshot_classif(
           1, 5, num_samples=1000)
       oneshot_20way_acc, _ = test_evaluator.eval_fewshot_classif(
           1, 20, num_samples=1000)
-      oneshot_20way_mAP, _ = test_evaluator.eval_oneshot_retrieval(
-          20, 10, num_samples=1000)
+      if not FLAGS.model == "siamese":
+        fiveshot_5way_acc, _ = test_evaluator.eval_fewshot_classif(
+          5, 5, num_samples=1000)
+        fiveshot_20way_acc, _ = test_evaluator.eval_fewshot_classif(
+          5, 20, num_samples=1000)
 
     elif config.dataset == "mini_imagenet":
       oneshot_5way_acc_mean, oneshot_5way_acc_pm = test_evaluator.eval_fewshot_classif(
           1, 5, num_samples=600)
-      fiveshot_5way_acc_mean, fiveshot_5way_acc_pm = test_evaluator.eval_fewshot_classif(
+      if not FLAGS.model == "siamese":
+        fiveshot_5way_acc_mean, fiveshot_5way_acc_pm = test_evaluator.eval_fewshot_classif(
           5, 5, num_samples=600)
       oneshot_5way_mAP_mean, oneshot_5way_mAP_pm = test_evaluator.eval_oneshot_retrieval(
-          5, 10, num_samples=600)
+        5, 10, num_samples=600)
       oneshot_20way_mAP_mean, oneshot_20way_mAP_pm = test_evaluator.eval_oneshot_retrieval(
-          20, 10, num_samples=600)
+        20, 10, num_samples=600)
 
     # Save results to file
     if not os.path.isdir(OUTDIR):
@@ -73,13 +81,18 @@ if __name__ == "__main__":
             "Results from model {} at update {}:\n".format(config.name, uidx))
         f.write("1-shot 5-way acc {}\n".format(oneshot_5way_acc))
         f.write("1-shot 20-way acc {}\n".format(oneshot_20way_acc))
+        if not FLAGS.model == "siamese":
+          f.write("5-shot 5-way acc {}\n".format(fiveshot_5way_acc))
+          f.write("5-shot 20-way acc {}\n".format(fiveshot_20way_acc))
+        f.write("1-shot 5-way mAP {}\n".format(oneshot_5way_mAP))
         f.write("1-shot 20-way mAP {}\n".format(oneshot_20way_mAP))
       elif config.dataset == "mini_imagenet":
         f.write(
             "Results from model {} at update {}:\n".format(config.name, uidx))
         f.write("1-shot 5-way acc {} plus/minus {}\n".format(
             oneshot_5way_acc_mean, oneshot_5way_acc_pm))
-        f.write("5-shot 5-way acc {} plus/minus {}\n".format(
+        if not FLAGS.model == "siamese":
+          f.write("5-shot 5-way acc {} plus/minus {}\n".format(
             fiveshot_5way_acc_mean, fiveshot_5way_acc_pm))
         f.write("1-shot 5-way mAP {} plus/minus {}\n".format(
             oneshot_5way_mAP_mean, oneshot_5way_mAP_pm))

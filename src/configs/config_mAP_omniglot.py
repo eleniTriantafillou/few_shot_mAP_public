@@ -17,7 +17,7 @@ class MeanAveragePrecisionConfigOmniglot(GenericConfigOmniglot):
     self.lr = 0.001
     self.ada_learning_rate = False
     self.start_decr_lr = 2000
-    self.mult_lr_by = 0.5
+    self.mult_lr_value = 0.5
     self.freq_decr_lr = 2000
     self.smallest_lr = 0.0001
 
@@ -30,33 +30,23 @@ class MeanAveragePrecisionConfigOmniglot(GenericConfigOmniglot):
     self.positive_update = True
 
     # Batch formation
-    self.batch_size = 64
-    self.nway = 8  # number of classes allowed in each batch
+    self.batch_size = 128
+    self.nway = 16  # number of classes allowed in each batch
 
     self.reload = False
 
     self.name = "mAP_DLM_omniglot"
-
+    # self.name = "mAP_SSVM_omniglot"
+    
+    # Metrics to plot throughout training
     self.few_shot_metrics = [{
         "K": 1,
         "N": 5,
         "type": "classif"
     }, {
         "K": 1,
-        "N": 20,
-        "type": "classif"
-    }, {
-        "K": 5,
         "N": 5,
-        "type": "classif"
-    }, {
-        "K": 5,
-        "N": 20,
-        "type": "classif"
-    }, {
-        "K": 1,
-        "N": 20,
-        "type": "retrieval"
+         "type": "retrieval"
     }]
 
     # deep dashboard location

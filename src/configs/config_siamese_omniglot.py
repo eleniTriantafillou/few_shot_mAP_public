@@ -28,25 +28,22 @@ class SiameseConfigOmniglot(GenericConfigOmniglot):
     self.optimizer = "ADAM"
 
     # Batch formation
-    self.batch_size = 64
-    self.nway = 8  # number of classes allowed in each batch
+    self.batch_size = 128
+    self.nway = 16  # number of classes allowed in each batch
 
-    self.reload = False
+    self.reload = True
 
     self.name = "siamese_omniglot"
 
+    # Metrics to plot throughout training
     self.few_shot_metrics = [{
         "K": 1,
         "N": 5,
-        "type": "classif"
+        "type": "classif" 
     }, {
         "K": 1,
-        "N": 20,
-        "type": "classif"
-    }, {
-        "K": 1,
-        "N": 20,
-        "type": "retrieval"
+        "N": 5,
+         "type": "retrieval"
     }]
 
     # deep dashboard location

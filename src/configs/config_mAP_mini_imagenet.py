@@ -17,7 +17,7 @@ class MeanAveragePrecisionConfigMiniImageNet(GenericConfigMiniImageNet):
     self.lr = 0.001
     self.ada_learning_rate = True
     self.start_decr_lr = 2000
-    self.mult_lr_value = 0.5
+    self.mult_lr_value = 0.75
     self.freq_decr_lr = 2000
     self.smallest_lr = 0.00001
 
@@ -30,31 +30,23 @@ class MeanAveragePrecisionConfigMiniImageNet(GenericConfigMiniImageNet):
     self.positive_update = True
 
     # Batch formation
-    # self.batch_size = 64
     self.batch_size = 128
-    # self.batch_size = 16
     self.nway = 8  # number of classes allowed in each batch
 
     self.reload = False
 
     self.name = "mAP_DLM_miniImageNet"
+    # self.name = "mAP_SSVM_miniImageNet"
 
+    # Metrics to plot throughout training
     self.few_shot_metrics = [{
         "K": 1,
         "N": 5,
         "type": "classif"
     }, {
-        "K": 5,
-        "N": 5,
-        "type": "classif"
-    }, {
         "K": 1,
         "N": 5,
-        "type": "retrieval"
-    }, {
-        "K": 1,
-        "N": 20,
-        "type": "retrieval"
+         "type": "retrieval"
     }]
 
     # deep dashboard location
