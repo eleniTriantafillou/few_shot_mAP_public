@@ -1,10 +1,7 @@
-OMNIGLOT_PATH="/ais/gobi4/eleni/omniglot"
-MINI_IMAGENET_PATH="/ais/gobi4/eleni/miniImagenet/images"
-OMNIGLOT_SPLITS_PATH="/ais/gobi4/eleni/few_shot_mAP/data/dataset_splits/omniglot"
-MINI_IMAGENET_SPLITS_PATH="/ais/gobi4/eleni/few_shot_mAP/data/dataset_splits/mini_imagenet"
+OMNIGLOT_PATH="path_to_omniglot"
+MINI_IMAGENET_PATH="path_to_imagenet"
+MINI_IMAGENET_SPLITS_PATH="path_to_mini_imagenet_splits"
 
-mkdir -p data/dataset_splits
 ln -s $OMNIGLOT_PATH data/omniglot
 ln -s $MINI_IMAGENET_PATH data/mini_imagenet
-ln -s $OMNIGLOT_SPLITS_PATH data/dataset_splits/omniglot
 ln -s $MINI_IMAGENET_SPLITS_PATH data/dataset_splits/mini_imagenet
